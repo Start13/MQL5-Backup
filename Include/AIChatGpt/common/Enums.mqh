@@ -1,0 +1,5 @@
+// Enums.mqh
+enum ENUM_SIGNAL_MODE {
+   SIGNAL_LIVE = 0,
+   SIGNAL_CANDLE_CLOSED = 1
+};

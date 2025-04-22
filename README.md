@@ -9,3 +9,4 @@ Questo repository contiene:
 - Include files (MQH)
 
 **Ultimo backup:** 22 aprile 2025, 15:17
+
