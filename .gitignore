@@ -1,0 +1,12 @@
+﻿# File compilati
+*.ex5
+*.ex4
+
+# File temporanei
+*.tmp
+
+# Log files
+*.log
+
+# File di configurazione personali
+terminal.ini
