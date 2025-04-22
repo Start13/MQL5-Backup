@@ -8,7 +8,8 @@ Questo repository contiene:
 - Script
 - Include files (MQH)
 
-**Ultimo backup:** 22 aprile 2025, 16:06
+**Ultimo backup:** 22 aprile 2025, 16:15
+
 
 
 
