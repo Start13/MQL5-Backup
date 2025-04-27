@@ -1,7 +1,7 @@
 //+------------------------------------------------------------------+
 //|                                              SlotManager.mqh |
 //|        Sistema avanzato di gestione slot per OmniEA          |
-//|        Supervisionato da AI Windsurf                         |
+//|        AlgoWi Implementation                         |
 //+------------------------------------------------------------------+
 #property copyright "BlueTrendTeam"
 #property link      "https://www.bluetrendteam.com"
@@ -9,8 +9,8 @@
 
 #include <Arrays\ArrayObj.mqh>
 #include <Indicators\Indicator.mqh>
-#include "..\..\common\Localization.mqh"
-#include "..\..\common\BufferLabeling.mqh"
+#include "..\common\Localization.mqh"
+#include "..\common\BufferLabeling.mqh"
 
 // Enumerazioni per le condizioni
 enum ENUM_SLOT_CONDITION
@@ -497,6 +497,80 @@ public:
          default:
             return "";
       }
+   }
+   
+   // Ottiene il numero di buffer di un indicatore
+   int GetIndicatorBuffers(string indicatorName)
+   {
+      // Cerca prima tra gli slot di acquisto
+      for(int i = 0; i < m_maxBuySlots; i++)
+      {
+         if(m_buySlots[i].name == indicatorName && m_buySlots[i].IsValid())
+         {
+            // Per la maggior parte degli indicatori standard, possiamo stimare il numero di buffer
+            string lname = indicatorName;
+            StringToLower(lname);
+            
+            // Indicatori comuni e loro numero di buffer
+            if(StringFind(lname, "macd") != -1) return 3;           // MACD: linea MACD, linea di segnale, istogramma
+            if(StringFind(lname, "rsi") != -1) return 1;            // RSI: valore RSI
+            if(StringFind(lname, "stoch") != -1) return 2;          // Stocastico: %K, %D
+            if(StringFind(lname, "bands") != -1) return 3;          // Bollinger Bands: media, banda superiore, banda inferiore
+            if(StringFind(lname, "envelopes") != -1) return 2;      // Envelopes: banda superiore, banda inferiore
+            if(StringFind(lname, "cci") != -1) return 1;            // CCI: valore CCI
+            if(StringFind(lname, "adx") != -1) return 3;            // ADX: ADX, +DI, -DI
+            if(StringFind(lname, "alligator") != -1) return 3;      // Alligator: jaw, teeth, lips
+            if(StringFind(lname, "ichimoku") != -1) return 5;       // Ichimoku: Tenkan-sen, Kijun-sen, Senkou Span A, Senkou Span B, Chikou Span
+            if(StringFind(lname, "atr") != -1) return 1;            // ATR: valore ATR
+            if(StringFind(lname, "ma") != -1) return 1;             // Media mobile: valore MA
+            if(StringFind(lname, "momentum") != -1) return 1;       // Momentum: valore Momentum
+            if(StringFind(lname, "force") != -1) return 1;          // Force Index: valore Force Index
+            if(StringFind(lname, "bears") != -1) return 1;          // Bears Power: valore Bears Power
+            if(StringFind(lname, "bulls") != -1) return 1;          // Bulls Power: valore Bulls Power
+            if(StringFind(lname, "volume") != -1) return 1;         // Volume: valore Volume
+            if(StringFind(lname, "obv") != -1) return 1;            // OBV: valore OBV
+            
+            // Per indicatori personalizzati o non riconosciuti, restituisci un valore predefinito
+            return 3;  // La maggior parte degli indicatori ha almeno 1-3 buffer
+         }
+      }
+      
+      // Cerca tra gli slot di vendita
+      for(int i = 0; i < m_maxSellSlots; i++)
+      {
+         if(m_sellSlots[i].name == indicatorName && m_sellSlots[i].IsValid())
+         {
+            // Usa la stessa logica di sopra
+            string lname = indicatorName;
+            StringToLower(lname);
+            
+            if(StringFind(lname, "macd") != -1) return 3;
+            if(StringFind(lname, "rsi") != -1) return 1;
+            // ... stesse condizioni di sopra
+            
+            return 3;
+         }
+      }
+      
+      // Cerca tra gli slot di filtro
+      for(int i = 0; i < m_maxFilterSlots; i++)
+      {
+         if(m_filterSlots[i].name == indicatorName && m_filterSlots[i].IsValid())
+         {
+            // Usa la stessa logica di sopra
+            string lname = indicatorName;
+            StringToLower(lname);
+            
+            if(StringFind(lname, "macd") != -1) return 3;
+            if(StringFind(lname, "rsi") != -1) return 1;
+            // ... stesse condizioni di sopra
+            
+            return 3;
+         }
+      }
+      
+      // Se l'indicatore non è stato trovato, restituisci un valore predefinito
+      return 0;
    }
    
    // Gestisce l'evento di drag & drop

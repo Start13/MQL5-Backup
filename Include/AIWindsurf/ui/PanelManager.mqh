@@ -1,15 +1,27 @@
 //+------------------------------------------------------------------+
 //|                                            PanelManager.mqh |
 //|        Gestore principale del pannello per OmniEA            |
-//|        Supervisionato da AI Windsurf                         |
+//|        AlgoWi Implementation                         |
 //+------------------------------------------------------------------+
 #property copyright "BlueTrendTeam"
 #property link      "https://www.bluetrendteam.com"
 #property strict
 
+// Includi le definizioni degli eventi di chart
+#include <ChartObjects\ChartObject.mqh>
+
+// Definizione degli eventi di chart mancanti
+#ifndef CHARTEVENT_DRAG_PROCESS
+#define CHARTEVENT_DRAG_PROCESS 1024
+#endif
+
+#ifndef CHARTEVENT_OBJECT_DRAG_END
+#define CHARTEVENT_OBJECT_DRAG_END 1025
+#endif
+
 #include "PanelEvents.mqh"
 #include "..\omniea\SlotManager.mqh"
-#include "..\common\PresetManager.mqh"
+#include "..\omniea\PresetManager.mqh"
 #include "..\common\ReportGenerator.mqh"
 
 //+------------------------------------------------------------------+
@@ -58,24 +70,24 @@ public:
    }
    
    // Imposta il gestore degli slot
-   void SetSlotManager(CSlotManager *slotManager)
+   void SetSlotManager(CSlotManager *slotMgr)
    {
-      m_slotManager = slotManager;
-      CPanelEvents::SetSlotManager(slotManager);
+      m_slotManager = slotMgr;
+      CPanelEvents::SetSlotManager(slotMgr);
    }
    
    // Imposta il gestore dei preset
-   void SetPresetManager(CPresetManager *presetManager)
+   void SetPresetManager(CPresetManager *presetMgr)
    {
-      m_presetManager = presetManager;
-      CPanelEvents::SetPresetManager(presetManager);
+      m_presetManager = presetMgr;
+      CPanelEvents::SetPresetManager(presetMgr);
    }
    
    // Imposta il generatore di report
-   void SetReportGenerator(CReportGenerator *reportGenerator)
+   void SetReportGenerator(CReportGenerator *reportGen)
    {
-      m_reportGenerator = reportGenerator;
-      CPanelEvents::SetReportGenerator(reportGenerator);
+      m_reportGenerator = reportGen;
+      CPanelEvents::SetReportGenerator(reportGen);
    }
    
    // Aggiornamento del pannello
@@ -105,6 +117,75 @@ public:
       if(!m_isInitialized) return;
       
       CPanelEvents::OnChartEvent(id, lparam, dparam, sparam);
+   }
+   
+   // Elabora gli eventi del pannello e restituisce true se l'evento è stato gestito
+   bool ProcessEvent(const int id, const long &lparam, const double &dparam, const string &sparam)
+   {
+      if(!m_isInitialized) return false;
+      
+      // Gestione degli eventi di selezione indicatore
+      if(id == CHARTEVENT_OBJECT_CLICK)
+      {
+         // Verifica se l'oggetto cliccato è un pulsante indicatore
+         if(StringFind(sparam, "btn_indicator_") >= 0)
+         {
+            // Estrai l'indice dello slot e il tipo
+            string parts[];
+            StringSplit(sparam, '_', parts);
+            if(ArraySize(parts) >= 3)
+            {
+               int slotIndex = (int)StringToInteger(parts[2]);
+               ENUM_SLOT_TYPE slotType = SLOT_BUY;
+               
+               if(StringFind(sparam, "buy") >= 0)
+                  slotType = SLOT_BUY;
+               else if(StringFind(sparam, "sell") >= 0)
+                  slotType = SLOT_SELL;
+               else if(StringFind(sparam, "filter") >= 0)
+                  slotType = SLOT_FILTER;
+               
+               // Ottieni il nome dell'indicatore selezionato
+               string indicatorName = "";
+               
+               // Verifica quale indicatore è stato selezionato
+               if(m_slotManager != NULL)
+               {
+                  if(slotType == SLOT_BUY && slotIndex < m_slotManager.GetMaxSlots(SLOT_BUY))
+                  {
+                     // Qui dovremmo ottenere il nome dell'indicatore dallo slot
+                     // Per ora usiamo un evento generico
+                     EventChartCustom(0, CHARTEVENT_CUSTOM + 1, slotIndex, 0, "Indicator_" + IntegerToString(slotIndex));
+                     return true;
+                  }
+                  else if(slotType == SLOT_SELL && slotIndex < m_slotManager.GetMaxSlots(SLOT_SELL))
+                  {
+                     EventChartCustom(0, CHARTEVENT_CUSTOM + 1, slotIndex + 100, 0, "Indicator_" + IntegerToString(slotIndex));
+                     return true;
+                  }
+                  else if(slotType == SLOT_FILTER && slotIndex < m_slotManager.GetMaxSlots(SLOT_FILTER))
+                  {
+                     EventChartCustom(0, CHARTEVENT_CUSTOM + 1, slotIndex + 200, 0, "Indicator_" + IntegerToString(slotIndex));
+                     return true;
+                  }
+               }
+            }
+         }
+      }
+      
+      // Gestione degli eventi di drag & drop
+      if(id == CHARTEVENT_DRAG_PROCESS || id == CHARTEVENT_OBJECT_DRAG_END)
+      {
+         if(StringFind(sparam, "indicator_") >= 0)
+         {
+            // Qui gestiamo il drag & drop degli indicatori
+            // Generiamo un evento personalizzato quando un indicatore viene trascinato
+            EventChartCustom(0, CHARTEVENT_CUSTOM + 2, 0, 0, sparam);
+            return true;
+         }
+      }
+      
+      return false;
    }
    
 private:

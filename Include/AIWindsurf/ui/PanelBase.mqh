@@ -1,7 +1,7 @@
-//+------------------------------------------------------------------+
+﻿//+------------------------------------------------------------------+
 //|                                               PanelBase.mqh |
 //|        Funzionalità di base per il pannello di OmniEA        |
-//|        Supervisionato da AI Windsurf                         |
+//|        AlgoWi Implementation                         |
 //+------------------------------------------------------------------+
 #property copyright "BlueTrendTeam"
 #property link      "https://www.bluetrendteam.com"
@@ -266,3 +266,4 @@ public:
       return m_isVisible;
    }
 };
+
