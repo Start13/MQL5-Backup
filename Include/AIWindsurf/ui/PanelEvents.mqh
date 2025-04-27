@@ -1,15 +1,16 @@
 //+------------------------------------------------------------------+
 //|                                             PanelEvents.mqh |
 //|        Gestione degli eventi per il pannello di OmniEA        |
-//|        Supervisionato da AI Windsurf                         |
+//|        AlgoWi Implementation                         |
 //+------------------------------------------------------------------+
 #property copyright "BlueTrendTeam"
 #property link      "https://www.bluetrendteam.com"
 #property strict
 
 #include <AIWindsurf\ui\PanelUI.mqh>
-#include <AIWindsurf\common\PresetManager.mqh>
+#include <AIWindsurf\omniea\PresetManager.mqh>
 #include <AIWindsurf\common\ReportGenerator.mqh>
+#include <AIWindsurf\ui\DragDropManager.mqh>
 
 // Dichiarazione anticipata
 class CSlotManager;
@@ -24,6 +25,7 @@ private:
    CSlotManager     *m_slotManager;     // Puntatore al gestore degli slot
    CPresetManager   *m_presetManager;   // Puntatore al gestore dei preset
    CReportGenerator *m_reportGenerator; // Puntatore al generatore di report
+   CDragDropManager  m_dragDropManager; // Gestore del drag & drop
    
    // Stato del drag & drop
    bool              m_isDragging;      // Flag di trascinamento in corso
@@ -42,6 +44,8 @@ public:
       m_presetManager = NULL;
       m_reportGenerator = NULL;
       
+      m_dragDropManager = CDragDropManager(m_prefix);
+      
       m_isDragging = false;
       m_draggedObject = "";
       m_dragStartX = 0;
@@ -51,21 +55,22 @@ public:
    }
    
    // Imposta il gestore degli slot
-   void SetSlotManager(CSlotManager *slotManager)
+   void SetSlotManager(CSlotManager *slotMgr)
    {
-      m_slotManager = slotManager;
+      m_slotManager = slotMgr;
+      m_dragDropManager.SetSlotManager(slotMgr);
    }
    
    // Imposta il gestore dei preset
-   void SetPresetManager(CPresetManager *presetManager)
+   void SetPresetManager(CPresetManager *presetMgr)
    {
-      m_presetManager = presetManager;
+      m_presetManager = presetMgr;
    }
    
    // Imposta il generatore di report
-   void SetReportGenerator(CReportGenerator *reportGenerator)
+   void SetReportGenerator(CReportGenerator *reportGen)
    {
-      m_reportGenerator = reportGenerator;
+      m_reportGenerator = reportGen;
    }
    
    // Gestione degli eventi del grafico
@@ -82,22 +87,8 @@ public:
          }
       }
       
-      // Gestione del drag & drop
-      if(id == CHARTEVENT_OBJECT_DRAG)
-      {
-         if(StringSubstr(sparam, 0, StringLen(m_prefix)) == m_prefix)
-         {
-            HandleObjectDrag(sparam);
-         }
-      }
-      
-      if(id == CHARTEVENT_OBJECT_DRAGEND)
-      {
-         if(m_isDragging)
-         {
-            HandleObjectDragEnd();
-         }
-      }
+      // Gestione del drag & drop tramite il gestore dedicato
+      m_dragDropManager.OnChartEvent(id, lparam, dparam, sparam);
       
       // Gestione dei clic sugli slot
       if(id == CHARTEVENT_OBJECT_CLICK)
@@ -155,8 +146,16 @@ private:
       {
          m_configOpen = !m_configOpen;
          
-         // Mostra/nascondi il pannello di configurazione
-         // ...
+         if(m_configOpen)
+         {
+            // Mostra gli indicatori disponibili
+            m_dragDropManager.CreateIndicatorObjects(m_x + m_width + 10, m_y, 200, 200);
+         }
+         else
+         {
+            // Nascondi gli indicatori disponibili
+            m_dragDropManager.DeleteIndicatorObjects();
+         }
          
          string message = m_configOpen ? "Configurazione aperta" : "Configurazione chiusa";
          ShowNotification(message, clrSkyBlue);
@@ -257,7 +256,7 @@ private:
       if(m_slotManager == NULL) return;
       
       // Estrai il tipo di slot e l'indice
-      ENUM_SLOT_TYPE slotType;
+      ENUM_SLOT_TYPE slotType = SLOT_BUY; // Valore predefinito
       int slotIndex = -1;
       
       if(StringFind(buttonName, "BuySlotRemove") >= 0)

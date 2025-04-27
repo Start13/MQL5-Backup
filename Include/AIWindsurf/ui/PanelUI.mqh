@@ -1,7 +1,7 @@
-//+------------------------------------------------------------------+
+﻿//+------------------------------------------------------------------+
 //|                                                 PanelUI.mqh |
 //|        Elementi dell'interfaccia utente per OmniEA           |
-//|        Supervisionato da AI Windsurf                         |
+//|        AlgoWi Implementation                         |
 //+------------------------------------------------------------------+
 #property copyright "BlueTrendTeam"
 #property link      "https://www.bluetrendteam.com"
@@ -15,14 +15,15 @@
 //+------------------------------------------------------------------+
 class CPanelUI : public CPanelBase
 {
-private:
+protected:
    int               m_maxBuySlots;     // Numero massimo di slot di acquisto
    int               m_maxSellSlots;    // Numero massimo di slot di vendita
    int               m_maxFilterSlots;  // Numero massimo di slot di filtro
    
    // Stato del trading
    bool              m_isTradingEnabled;// Trading abilitato
-   
+
+private:
    // Dati di mercato
    string            m_symbol;          // Simbolo corrente
    string            m_broker;          // Nome del broker
@@ -328,3 +329,4 @@ private:
       // ...
    }
 };
+
